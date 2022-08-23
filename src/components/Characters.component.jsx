@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react'
+import React, { useState, useEffect, useReducer, useMemo } from 'react'
 
 const initialState = {
     favorites : []
@@ -19,32 +19,56 @@ const favoritesReducer = (state, action) => {
 const Characters = () => {
 
     const [characters, setCharacters] = useState([])
-    const [favorites, dispatch] = useReducer(favoritesReducer, initialState)
+    const [favorites, dispatch] = useReducer(favoritesReducer, initialState);
+    const [search, setSearch ] = useState('')
 
     useEffect(() => {
         fetch('https://rickandmortyapi.com/api/character/')
         .then(response => response.json())
-        .then(data => setCharacters(data.results));
+        .then(data => 
+            setCharacters(data.results)
+        );
+
     }, []);
 
     const handleClick = (favorite) => {
         dispatch({type: "ADD_TO_FAVORITE", payload: favorite})
     }
 
+    const HandleSearch = (event) => {
+        setSearch(event.target.value)
+    }
+
+    /*const filteredUsers = characters.filter((user) => {
+        return user.name.toLowerCase().includes(search.toLowerCase())
+    })*/
+
+    const filteredUsers = useMemo(() => 
+        characters.filter((user) => {
+            return user.name.toLowerCase().includes(search.toLowerCase())
+        }), [characters, search]
+    )
+
     return (
         <div className='Characters'>
             {
                 favorites.favorites.map((favorite) => 
-                    <li key={favorite}>
+                    <li key={favorite.id}>
                         {favorite}
                     </li>
                 )
             }
+
+            <div className="Search">
+                <input type='text' value={search} onChange = {(event) => {HandleSearch(event)}}/>
+            </div>
+
             {
-            characters.map((characters, index) => 
+            filteredUsers.map((characters, index) => 
                 <div className='item' key={characters.id}>
                     <h2 >{characters.name}</h2>
                     <button type="button" onClick={() => {handleClick(characters.name)}}>Agregar a favoritos</button>
+
                 </div>
             )}
         </div>
